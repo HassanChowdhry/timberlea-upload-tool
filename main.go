@@ -94,7 +94,7 @@ func installOllama(url string) error {
 	}
 
 	fmt.Printf("Ollama installed successfully to %s\n", finalPath)
-	fmt.Printf("Please run 'source ~/.bashrc' or restart your terminal to use the new version\n")
+	fmt.Printf("Please restart your terminal OR run 'source ~/.bashrc' to use the new version\n")
 	return nil
 }
 
