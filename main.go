@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os/exec"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -39,7 +39,10 @@ func installOllama(url string) error {
 	tempFile := "/tmp/ollama.tgz"
 
 	// Download the file to temp path
-	curlCommand  := exec.Command("curl", "-L", url, "-o", tempFile)
+	fmt.Printf("Downloading Ollama from %s...\n", url)
+	curlCommand := exec.Command("curl", "-L", "-#", url, "-o", tempFile)
+	curlCommand.Stdout = os.Stdout
+	curlCommand.Stderr = os.Stderr
 	if err := curlCommand.Run(); err != nil {
 		return fmt.Errorf("failed to download: %w", err)
 	}
@@ -52,7 +55,10 @@ func installOllama(url string) error {
 	}
 
 	// Extract the binary from the tgz file
+	fmt.Printf("Extracting Ollama binary...\n")
 	extractCommand := exec.Command("tar", "-xzf", tempFile, "-C", "/tmp")
+	extractCommand.Stdout = os.Stdout
+	extractCommand.Stderr = os.Stderr
 	if err := extractCommand.Run(); err != nil {
 		return fmt.Errorf("failed to extract: %w", err)
 	}
@@ -69,10 +75,10 @@ func installOllama(url string) error {
 	if err := chmodCommand.Run(); err != nil {
 		return fmt.Errorf("failed to make executable: %w", err)
 	}
-	
+
 	// Clean up temporary file
 	os.Remove(tempFile)
-	
+
 	fmt.Printf("Ollama installed successfully to %s\n", finalPath)
 	return nil
 }
@@ -86,7 +92,7 @@ func main() {
 
 	url := getDownloadURL(version)
 	fmt.Printf("Latest Ollama version: %s\n", version)
-	
+
 	if err := installOllama(url); err != nil {
 		fmt.Printf("Installation failed: %v\n", err)
 		return
