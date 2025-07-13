@@ -36,12 +36,12 @@ func getDownloadURL(version string) string {
 }
 
 func installOllama(url string) error {
-	tempFile := "tmp/ollama.tgz"
+	tempFile := "/tmp/ollama.tgz"
 
 	// Download the file to temp path
 	curlCommand  := exec.Command("curl", "-L", url, "-o", tempFile)
 	if err := curlCommand.Run(); err != nil {
-		return fmt.Errorf("Failed to download: %w", err)
+		return fmt.Errorf("failed to download: %w", err)
 	}
 
 	// Create the bin directory if it doesn't exist
