@@ -56,7 +56,7 @@ func installOllama(url string) error {
 
 	// Extract the binary from the tgz file
 	fmt.Printf("Extracting Ollama binary...\n")
-	extractCommand := exec.Command("tar", "-xzf", tempFile, "-C", "/tmp")
+	extractCommand := exec.Command("tar", "-xzf", tempFile, "-C", "/tmp", "--no-same-owner", "--no-same-permissions")
 	extractCommand.Stdout = os.Stdout
 	extractCommand.Stderr = os.Stderr
 	if err := extractCommand.Run(); err != nil {
