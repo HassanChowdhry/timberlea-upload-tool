@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 const INSTALLPATH = "~/bin/ollama"
@@ -86,7 +88,43 @@ func installOllama(url string) error {
 	os.Remove(tempFile)
 	os.RemoveAll(tempDir)
 
+	// Update PATH in .bashrc
+	if err := updatePath(homeDir); err != nil {
+		fmt.Printf("Warning: Failed to update PATH: %v\n", err)
+	}
+
 	fmt.Printf("Ollama installed successfully to %s\n", finalPath)
+	fmt.Printf("Please run 'source ~/.bashrc' or restart your terminal to use the new version\n")
+	return nil
+}
+
+func updatePath(homeDir string) error {
+	bashrcPath := filepath.Join(homeDir, ".bashrc")
+	pathExport := `export PATH="$HOME/bin:$PATH"`
+
+	// Check if PATH export already exists
+	if file, err := os.Open(bashrcPath); err == nil {
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			if strings.Contains(scanner.Text(), pathExport) {
+				file.Close()
+				return nil // Already exists
+			}
+		}
+		file.Close()
+	}
+
+	// Append the PATH export
+	file, err := os.OpenFile(bashrcPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open .bashrc: %w", err)
+	}
+	defer file.Close()
+
+	if _, err := file.WriteString("\n" + pathExport + "\n"); err != nil {
+		return fmt.Errorf("failed to write to .bashrc: %w", err)
+	}
+
 	return nil
 }
 
