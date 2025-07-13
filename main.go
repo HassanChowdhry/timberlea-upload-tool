@@ -36,7 +36,9 @@ func getDownloadURL(version string) string {
 }
 
 func installOllama(url string) error {
-	tempFile := "/tmp/ollama.tgz"
+	// Get home directory for temporary files
+	homeDir, _ := os.UserHomeDir()
+	tempFile := filepath.Join(homeDir, "ollama.tgz")
 
 	// Download the file to temp path
 	fmt.Printf("Downloading Ollama from %s...\n", url)
@@ -48,15 +50,19 @@ func installOllama(url string) error {
 	}
 
 	// Create the bin directory if it doesn't exist
-	homeDir, _ := os.UserHomeDir()
 	binDir := filepath.Join(homeDir, "bin")
 	if err := os.MkdirAll(binDir, 0755); err != nil {
 		return fmt.Errorf("failed to create bin directory: %w", err)
 	}
 
+	// Create temporary extraction directory
+	tempDir := filepath.Join(homeDir, "ollama-extract")
+	os.RemoveAll(tempDir)
+	os.MkdirAll(tempDir, 0755)
+
 	// Extract the binary from the tgz file
 	fmt.Printf("Extracting Ollama binary...\n")
-	extractCommand := exec.Command("tar", "-xzf", tempFile, "-C", "/tmp", "--no-same-owner", "--no-same-permissions")
+	extractCommand := exec.Command("tar", "-xzf", tempFile, "-C", tempDir)
 	extractCommand.Stdout = os.Stdout
 	extractCommand.Stderr = os.Stderr
 	if err := extractCommand.Run(); err != nil {
@@ -65,7 +71,7 @@ func installOllama(url string) error {
 
 	// Move the extracted binary to the final location
 	finalPath := filepath.Join(binDir, "ollama")
-	moveCommand := exec.Command("mv", "/tmp/ollama", finalPath)
+	moveCommand := exec.Command("mv", filepath.Join(tempDir, "bin", "ollama"), finalPath)
 	if err := moveCommand.Run(); err != nil {
 		return fmt.Errorf("failed to move binary: %w", err)
 	}
@@ -76,8 +82,9 @@ func installOllama(url string) error {
 		return fmt.Errorf("failed to make executable: %w", err)
 	}
 
-	// Clean up temporary file
+	// Clean up temporary files
 	os.Remove(tempFile)
+	os.RemoveAll(tempDir)
 
 	fmt.Printf("Ollama installed successfully to %s\n", finalPath)
 	return nil
