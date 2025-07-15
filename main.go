@@ -102,7 +102,7 @@ func updatePath(homeDir string) error {
 	pathExport := `export PATH="$HOME/bin:$PATH"`
 
 	// List of shell configuration files to update (in order of preference)
-	configFiles := []string{".bash_profile", ".bashrc", ".profile"}
+	configFiles := []string{".zshrc", ".bash_profile", ".bashrc", ".profile"}
 
 	for _, configFile := range configFiles {
 		configPath := filepath.Join(homeDir, configFile)
@@ -120,7 +120,16 @@ func updatePath(homeDir string) error {
 		}
 	}
 
-	// Try to update .bash_profile first (for login shells)
+	// Try to update .zshrc first (for zsh users)
+	zshrcPath := filepath.Join(homeDir, ".zshrc")
+	if fileExists(zshrcPath) {
+		if err := appendToFile(zshrcPath, pathExport); err == nil {
+			fmt.Printf("Updated .zshrc with PATH export\n")
+			return nil
+		}
+	}
+
+	// Try to update .bash_profile (for bash login shells)
 	bashProfilePath := filepath.Join(homeDir, ".bash_profile")
 	if err := appendToFile(bashProfilePath, pathExport); err == nil {
 		fmt.Printf("Updated .bash_profile with PATH export\n")
@@ -142,6 +151,11 @@ func updatePath(homeDir string) error {
 	}
 
 	return fmt.Errorf("failed to update any shell configuration file")
+}
+
+func fileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
 }
 
 func appendToFile(filePath, content string) error {
